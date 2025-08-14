@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
-import { clientes, ICliente } from "../interfaces";
+import { clientes, ICliente, IClienteSchema } from "../interfaces";
 import {isCPF} from 'validation-br'
 
-function isICliente(obj: any): obj is ICliente {
+//Função velha de verificação de Body
+
+/*function isICliente(obj: any): obj is ICliente {
     return (
         typeof obj.Nome === 'string' &&
         typeof obj.Cpf === 'string' &&
@@ -14,28 +16,29 @@ function isICliente(obj: any): obj is ICliente {
         typeof obj.Rg === 'number' &&
         typeof obj.Estado === 'string'
     );
-}
+}*/
 
 export async function store(req: Request, res: Response) {
-    const newCliente = req.body
     try {
+        const newCliente = IClienteSchema.parse(req.body)
+
         if(!newCliente) {
             return res.status(400).json({ error: "O corpo da requisição está vazio." });
         }
 
-        if(!isICliente(newCliente)) {
+        /*if(!isICliente(newCliente)) {
             return res.status(400).json({ error: "O corpo da requisição não contém todas as informações necessárias para um cliente." });
-        }
+        }*/
         
         if(!isCPF(newCliente.Cpf)){
             return res.status(400).json({ error: "O CPF é invalido"})
         }
 
-        const newClientes: ICliente = newCliente;
+        //const newClientes: ICliente = newCliente;
 
-        clientes.push(newClientes)
+        clientes.push(newCliente)
 
-        return res.status(200).json({message: newClientes})
+        return res.status(200).json({Criado: newCliente})
     } catch (error) {
         res.status(500).json({error: error})
     }

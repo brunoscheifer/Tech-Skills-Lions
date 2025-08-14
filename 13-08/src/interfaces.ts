@@ -1,8 +1,10 @@
+import * as zod from 'zod';
+
 interface IPessoa {
     Cpf: string,
     Nome: string,
     Rg: number
-}
+};
 
 interface IEndereco {
     Cep: string, 
@@ -10,11 +12,11 @@ interface IEndereco {
     Bairro: string, 
     Cidade: string, 
     Estado: string
-}
+};
 
 export interface ICliente extends IPessoa, IEndereco {
     Email: string
-}
+};
 
 export let clientes: ICliente[] = [
     {
@@ -39,4 +41,22 @@ export let clientes: ICliente[] = [
         Cidade: 'uma aí', 
         Estado: 'nsei'
     }
-]
+];
+
+const IPessoaSchema = zod.object({
+    Cpf: zod.string(),
+    Nome: zod.string(),
+    Rg: zod.number()
+});
+
+const IEnderecoSchema = zod.object({
+    Cep: zod.string(), 
+    Rua: zod.string(), 
+    Bairro: zod.string(), 
+    Cidade: zod.string(), 
+    Estado: zod.string()
+});
+
+export const IClienteSchema = zod.object({
+    Email: zod.string().regex(/^(?!\.)(?!.*\.\.)([a-z0-9_'+\-\.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9\-]*\.)+[a-z]{2,}$/i)
+}).extend(IPessoaSchema.shape).extend(IEnderecoSchema.shape);
