@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import axios from 'axios';
 import { AllCountriesSchema, Regions } from './interfaces';
 
-const API_URL = 'https://restcountries.com/v3.1/all';
+const API_URL = 'https://restcountries.com/v3.1/all?fields=name,region,capital,population,flags';
 
 const app = express();
 const port: number = 3000;
@@ -10,27 +10,25 @@ const port: number = 3000;
 app.use(express.json());
 
 app.get('/countries', async (req: Request, res: Response) => {
-  try {
-    const API_URL_WITH_FIELDS = API_URL + '?fields=name,region,capital,population,flags';
+  try {
+    const response = await fetch(API_URL);
 
-    const response = await fetch(API_URL_WITH_FIELDS);
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(503).json({ message: 'Erro ao buscar dados da API externa.', details: `Status ${response.status}: ${errorText}` });
+    }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return res.status(503).json({ message: 'Erro ao buscar dados da API externa.', details: `Status ${response.status}: ${errorText}` });
-    }
+    const data = await response.json();
+    const validationResult = AllCountriesSchema.safeParse(data);
 
-    const data = await response.json();
-    const validationResult = AllCountriesSchema.safeParse(data);
-
-    if (validationResult.success) {
-      res.json(validationResult.data);
-    } else {
-      res.status(500).json({ message: 'Falha na validação dos dados da API.', details: validationResult.error.issues });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Ocorreu um erro inesperado.' });
-  }
+    if (validationResult.success) {
+      res.json(validationResult.data);
+    } else {
+      res.status(500).json({ message: 'Falha na validação dos dados da API.', details: validationResult.error.issues });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Ocorreu um erro inesperado.'});
+  }
 });
 
 app.get('/countries/search', async (req: Request, res: Response) => {
@@ -49,9 +47,10 @@ app.get('/countries/search', async (req: Request, res: Response) => {
     }
 
     const allCountries = validationResult.data;
+    const searchTermLower = searchTerm.toLowerCase();
 
     const filteredCountries = allCountries.filter(country =>
-      country.name
+      country.name.common.toLowerCase().includes(searchTermLower)
     );
 
     res.json(filteredCountries);
