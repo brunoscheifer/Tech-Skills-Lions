@@ -16,6 +16,6 @@ export async function show(req: Request, res: Response) {
 
         return res.status(200).json(users)
     } catch(error) {
-        res.status(500).json({error: error})
+        res.status(200).json({message: error})
     }
 }

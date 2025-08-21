@@ -14,6 +14,6 @@ export async function destroy(req: Request, res: Response) {
 
         return res.status(200).json('Usuario deletado')
     } catch (error) {
-        
+        res.status(400).json({message: error})
     }
 }
